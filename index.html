@@ -9,46 +9,133 @@
       margin: 0;
       height: 100vh;
       overflow: hidden;
-      background: #111;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ffe45c, #36c5ff, #ff7ad9);
     }
 
     canvas {
-      background: #f4f4f4;
-      border: 4px solid #333;
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .settings {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 15px;
       border-radius: 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      color: #222;
+    }
+
+    .settings label {
+      display: block;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .settings input {
+      width: 160px;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <canvas id="canvas"></canvas>
+
+  <div class="settings">
+    <strong>Settings</strong>
+
+    <label>
+      Ball Size
+      <input id="sizeControl" type="range" min="10" max="80" value="30">
+    </label>
+
+    <label>
+      Speed
+      <input id="speedControl" type="range" min="1" max="15" value="5">
+    </label>
+
+    <label>
+      Ball Color
+      <input id="colorControl" type="color" value="#ff3b3b">
+    </label>
+
+    <label>
+      Trail Effect
+      <input id="trailControl" type="checkbox" checked>
+    </label>
+  </div>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
+    const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    let ball = {
+    const sizeControl = document.getElementById("sizeControl");
+    const speedControl = document.getElementById("speedControl");
+    const colorControl = document.getElementById("colorControl");
+    const trailControl = document.getElementById("trailControl");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    const ball = {
       x: canvas.width / 2,
       y: canvas.height / 2,
-      radius: 25,
-      dx: 4,
-      dy: 3,
-      color: "#ff4d4d"
+      radius: 30,
+      dx: 5,
+      dy: 5,
+      color: "#ff3b3b"
     };
+
+    function drawBackground() {
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, "#ffe45c");
+      gradient.addColorStop(0.5, "#36c5ff");
+      gradient.addColorStop(1, "#ff7ad9");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     function drawBall() {
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
       ctx.fillStyle = ball.color;
       ctx.fill();
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.stroke();
+
       ctx.closePath();
     }
 
-    function update() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function updateSettings() {
+      ball.radius = Number(sizeControl.value);
+      ball.color = colorControl.value;
+
+      const speed = Number(speedControl.value);
+      ball.dx = ball.dx > 0 ? speed : -speed;
+      ball.dy = ball.dy > 0 ? speed : -speed;
+    }
+
+    function animate() {
+      updateSettings();
+
+      if (trailControl.checked) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        drawBackground();
+      }
 
       drawBall();
 
@@ -63,10 +150,11 @@
         ball.dy *= -1;
       }
 
-      requestAnimationFrame(update);
+      requestAnimationFrame(animate);
     }
 
-    update();
+    drawBackground();
+    animate();
   </script>
 </body>
 </html>
